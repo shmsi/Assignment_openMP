@@ -12,28 +12,30 @@ int parseArgs(char* argv[]) {
     if(c[1] == 't') return atoi(&c[2]); else return -1; 
 }
 
-int readInput() {
-    FILE *file;
-    file = fopen("coords.txt", "r");
-    int length = getNumberOfLines(file);
-    printf("%d\n", length); 
-
-    Coordinate coordinates [length];
-    return length;
-
-}
 
 int getNumberOfLines(FILE *file) {
     int count = 0; 
     char c;
-    // Extract characters from file and store in character c 
     for (c = getc(file); c != EOF; c = getc(file)) 
-        if (c == '\n') // Increment count if this character is newline 
+        if (c == '\n')
             count = count + 1; 
-    return count;
+    return count-1;
 } 
 
-Coordinate parseCoordinate() {
+Coordinate* readInput() {
+    FILE *file;
+    file = fopen("coords.txt", "r");
+    int len = getNumberOfLines(file);
+    rewind(file);
+    Coordinate coordinates[len];
+
+    for(int i = 0; i < len; i++) 
+        fscanf(file, "%lf %lf %lf", &coordinates[i].x, &coordinates[i].y, &coordinates[i].z);
+
+    printf("%lf", coordinates[9].z);
+    fclose(file); 
+
+    return coordinates;
 }
 
 int main(int argc, char * argv[]) {
@@ -42,12 +44,9 @@ int main(int argc, char * argv[]) {
         printf("Usage: -t<int>. \n");
         return -1;
     }
-
     int num_threads = parseArgs(argv);
-    int len = readInput();
-
-    printf("%d\n", len); 
+    readInput(); 
     return 0;
-}
 
+}
 

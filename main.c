@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+// #include <omp.h>
+#include <math.h>
+
 
 typedef struct Coordinate
 {
@@ -17,14 +20,19 @@ int parseArgs(char *argv[])
         return -1;
 }
 
-int getNumberOfLines(FILE *file)
-{
+double round(double var) {
+ double value = (int)(var * 100 + .5);
+ return (double)value / 100;
+}
+
+
+int getNumberOfLines(FILE *file) {
     int count = 0;
     char c;
     for (c = getc(file); c != EOF; c = getc(file))
         if (c == '\n')
             count = count + 1;
-    return count - 1;
+    return count-1;
 }
 
 int main(int argc, char *argv[])
@@ -46,17 +54,35 @@ int main(int argc, char *argv[])
         fscanf(file, "%lf %lf %lf", &coordinates[i].x, &coordinates[i].y, &coordinates[i].z);
     fclose(file);
 
-    omp_set_num_threads(num_threads); 
-#pragma omp parallel shared(coordinates)
+    int *occurences = (int*)calloc(10000, sizeof(int));
+
+
+
+    // #pragma omp parallel shared(coordinates)
+   // {
     long dist;
-    for (int i = 0; i < len; i++)
-    {
-        for (int j = 0; j < len; j++)
+    for (int i = 0; i < len; i++) {
+        for (int j = i+1; j < len; j++)
         {
-            float d = roundf(sqrt(pow(coordinates[i].x - coordinates[j].x, 2) +
-                                  pow(coordinates[i].y - coordinates[j].y, 2) +
-                                  pow(coordinates[i].z - coordinates[j].z, 2) * 1.0));
+            double d = round(sqrt(pow(coordinates[i].x - coordinates[j].x, 2) +
+                          pow(coordinates[i].y - coordinates[j].y, 2) +
+                          pow(coordinates[i].z - coordinates[j].z, 2) * 1.0));
+            int d_int = d*100;
+            occurences[d_int]++;
         }
     }
+
+
+
+    for(int i = 0; i < 10000; i++) {
+        if(occurences[i] != 0) {
+            double a;
+            a = ((double)i)/100.0;
+            printf("%.2lf %d\n", a, occurences[i]);
+        }
+    }
+    //}
     return 0;
+
+
 }

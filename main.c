@@ -56,23 +56,24 @@ int main(int argc, char *argv[])
 
     int *occurences = (int*)calloc(10000, sizeof(int));
 
-
-
-    // #pragma omp parallel shared(coordinates)
-   // {
-    long dist;
-    for (int i = 0; i < len; i++) {
-        for (int j = i+1; j < len; j++)
-        {
-            double d = round(sqrt(pow(coordinates[i].x - coordinates[j].x, 2) +
-                          pow(coordinates[i].y - coordinates[j].y, 2) +
-                          pow(coordinates[i].z - coordinates[j].z, 2) * 1.0));
-            int d_int = d*100;
-            occurences[d_int]++;
+    omp_set_num_threads(num_threads);
+    #pragma omp parallel shared(coordinates, occurences)
+    {
+        // long dist;
+        double d;
+        int d_int;
+        #pragma omp paralel for private(i,j) shared(d, d_int)
+        for (int i = 0; i < len; i++) {
+            for (int j = i+1; j < len; j++)
+            {
+                d = round(sqrt(pow(coordinates[i].x - coordinates[j].x, 2) +
+                            pow(coordinates[i].y - coordinates[j].y, 2) +
+                            pow(coordinates[i].z - coordinates[j].z, 2) * 1.0));
+                d_int = d*100;
+                occurences[d_int]++;
+            }
         }
     }
-
-
 
     for(int i = 0; i < 10000; i++) {
         if(occurences[i] != 0) {
@@ -81,8 +82,6 @@ int main(int argc, char *argv[])
             printf("%.2lf %d\n", a, occurences[i]);
         }
     }
-    //}
+
     return 0;
-
-
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-// #include <omp.h>
+#include <omp.h>
+#include <string.h>
 #include <math.h>
 
 
@@ -56,21 +57,19 @@ int main(int argc, char *argv[])
 
     int *occurences = (int*)calloc(10000, sizeof(int));
 
+    unsigned int distance, i, j;
     omp_set_num_threads(num_threads);
-    #pragma omp parallel shared(coordinates, occurences)
+
+    #pragma omp parallel
     {
-        // long dist;
-        double d;
-        int d_int;
-        #pragma omp paralel for private(i,j) shared(d, d_int)
+        #pragma omp for
         for (int i = 0; i < len; i++) {
             for (int j = i+1; j < len; j++)
             {
-                d = round(sqrt(pow(coordinates[i].x - coordinates[j].x, 2) +
+                distance = round(sqrt(pow(coordinates[i].x - coordinates[j].x, 2) +
                             pow(coordinates[i].y - coordinates[j].y, 2) +
-                            pow(coordinates[i].z - coordinates[j].z, 2) * 1.0));
-                d_int = d*100;
-                occurences[d_int]++;
+                            pow(coordinates[i].z - coordinates[j].z, 2) * 1.0)) * 100;
+                occurences[distance]++;
             }
         }
     }

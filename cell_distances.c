@@ -4,6 +4,9 @@
 #include <string.h>
 #include <math.h>
 
+// Assuming the cordinates are between -10 and 10
+// The maximal distance will be sqrt(1200)
+#define MAX_DIST 3566
 
 typedef struct Coordinate
 {
@@ -22,18 +25,17 @@ int parseArgs(char *argv[])
 }
 
 double round(double var) {
- double value = (int)(var * 100 + .5);
- return (double)value / 100;
+    double value = (int)(var * 100);
+    return (double)value / 100;
 }
 
-
-int getNumberOfLines(FILE *file) {
+int get_number_of_lines(FILE *file) {
     int count = 0;
     char c;
     for (c = getc(file); c != EOF; c = getc(file))
         if (c == '\n')
             count = count + 1;
-    return count-1;
+    return count;
 }
 
 int main(int argc, char *argv[])
@@ -44,43 +46,44 @@ int main(int argc, char *argv[])
         printf("Usage: -t<int>. \n");
         return -1;
     }
+
     int num_threads = parseArgs(argv);
     FILE *file;
-    file = fopen("coords.txt", "r");
-    int len = getNumberOfLines(file);
+    file = fopen("cells5", "r");
+    int len = get_number_of_lines(file);
     rewind(file);
     Coordinate coordinates[len];
+    omp_set_num_threads(num_threads);
 
-    for (int i = 0; i < len; i++)
-        fscanf(file, "%lf %lf %lf", &coordinates[i].x, &coordinates[i].y, &coordinates[i].z);
+    for (int ix = 0; ix < len; ix++) {
+        fscanf(file, "%lf %lf %lf", &coordinates[ix].x, &coordinates[ix].y, &coordinates[ix].z);
+    }
     fclose(file);
 
-    int *occurences = (int*)calloc(10000, sizeof(int));
+    int *occurences = (int*)calloc(MAX_DIST, sizeof(int));
 
     unsigned int distance, i, j, n_per_thread;
-    omp_set_num_threads(num_threads);
     n_per_thread = len/num_threads;
 
     #pragma omp parallel shared(coordinates, len)
     {
-        #pragma omp for private (i, j, distance) schedule(static, n_per_thread)
+        #pragma omp for private (i, j, distance) // schedule(static, n_per_thread)
         for (i = 0; i < len; i++) {
             for (j = i+1; j < len; j++)
             {
-                distance = round(sqrt(pow(coordinates[i].x - coordinates[j].x, 2) +
-                            pow(coordinates[i].y - coordinates[j].y, 2) +
-                            pow(coordinates[i].z - coordinates[j].z, 2) * 1.0)) * 100;
+                double xdiff = coordinates[i].x - coordinates[j].x;
+                double ydiff = coordinates[i].y - coordinates[j].y;
+                double zdiff = coordinates[i].z - coordinates[j].z;
+                distance = round(sqrt(xdiff*xdiff + ydiff*ydiff + zdiff*zdiff)) * 100;
                 occurences[distance]++;
             }
         }
     }
 
-    for(int i = 0; i < 10000; i++) {
-        if(occurences[i] != 0) {
+    for(int i = 0; i < MAX_DIST; i++) {
             double a;
             a = ((double)i)/100.0;
             printf("%.2lf %d\n", a, occurences[i]);
-        }
     }
 
     return 0;

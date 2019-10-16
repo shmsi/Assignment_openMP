@@ -24,10 +24,6 @@ int parseArgs(char *argv[])
         return -1;
 }
 
-double round(double var) {
-    double value = (int)(var * 100);
-    return (double)value / 100;
-}
 
 int get_number_of_lines(FILE *file) {
     int count = 0;
@@ -49,7 +45,7 @@ int main(int argc, char *argv[])
 
     int num_threads = parseArgs(argv);
     FILE *file;
-    file = fopen("cells5", "r");
+        file = fopen("cells5", "r");
     int len = get_number_of_lines(file);
     rewind(file);
     Coordinate coordinates[len];
@@ -62,20 +58,20 @@ int main(int argc, char *argv[])
 
     int *occurences = (int*)calloc(MAX_DIST, sizeof(int));
 
-    unsigned int distance, i, j, n_per_thread;
-    n_per_thread = len/num_threads;
+    unsigned long distance, i, j;
 
     #pragma omp parallel shared(coordinates, len)
     {
-        #pragma omp for private (i, j, distance) // schedule(static, n_per_thread)
+
+        #pragma omp for reduction (+: occurences[:MAX_DIST]) private (i, j, distance) schedule(dynamic)
         for (i = 0; i < len; i++) {
             for (j = i+1; j < len; j++)
             {
                 double xdiff = coordinates[i].x - coordinates[j].x;
                 double ydiff = coordinates[i].y - coordinates[j].y;
                 double zdiff = coordinates[i].z - coordinates[j].z;
-                distance = round(sqrt(xdiff*xdiff + ydiff*ydiff + zdiff*zdiff)) * 100;
-                occurences[distance]++;
+                distance = (sqrt(xdiff*xdiff + ydiff*ydiff + zdiff*zdiff)) * 100;
+                occurences[(int)distance]++;
             }
         }
     }

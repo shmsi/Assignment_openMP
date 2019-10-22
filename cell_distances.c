@@ -6,13 +6,13 @@
 
 // Assuming the cordinates are between -10 and 10
 // The maximal distance will be sqrt(1200)
-#define MAX_DIST 3566
+#define MAX_DIST 3565
 
 typedef struct Coordinate
 {
-    double x;
-    double y;
-    double z;
+    short x;
+    short y;
+    short z;
 } Coordinate;
 
 int parseArgs(char *argv[])
@@ -52,14 +52,18 @@ int main(int argc, char *argv[])
     omp_set_num_threads(num_threads);
 
     for (int ix = 0; ix < len; ix++) {
-        fscanf(file, "%lf %lf %lf", &coordinates[ix].x, &coordinates[ix].y, &coordinates[ix].z);
+        float x, y, z;
+        fscanf(file, "%f %f %f", &x, &y, &z);
+        coordinates[ix].x = x * 1000;
+        coordinates[ix].y = y * 1000;
+        coordinates[ix].z = z * 1000;
     }
     fclose(file);
 
-    int *occurences = (int*)calloc(MAX_DIST, sizeof(int));
+    long *occurences = (long*)calloc(MAX_DIST, sizeof(long));
 
-    unsigned long distance, i, j;
-
+    unsigned short distance;
+    int i, j;
     #pragma omp parallel shared(coordinates, len)
     {
 
@@ -67,19 +71,19 @@ int main(int argc, char *argv[])
         for (i = 0; i < len; i++) {
             for (j = i+1; j < len; j++)
             {
-                double xdiff = coordinates[i].x - coordinates[j].x;
-                double ydiff = coordinates[i].y - coordinates[j].y;
-                double zdiff = coordinates[i].z - coordinates[j].z;
-                distance = (sqrt(xdiff*xdiff + ydiff*ydiff + zdiff*zdiff)) * 100;
-                occurences[(int)distance]++;
+                short xdiff = coordinates[i].x - coordinates[j].x;
+                short ydiff = coordinates[i].y - coordinates[j].y;
+                short zdiff = coordinates[i].z - coordinates[j].z;
+                distance = (short)(sqrt(xdiff*xdiff + ydiff*ydiff + zdiff*zdiff) / 10);
+                occurences[distance]++;
             }
         }
     }
 
     for(int i = 0; i < MAX_DIST; i++) {
-            double a;
-            a = ((double)i)/100.0;
-            printf("%.2lf %d\n", a, occurences[i]);
+            float a;
+            a = ((float)i)/100.0;
+            printf("%05.2f %ld\n", a, occurences[i]);
     }
 
     return 0;

@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
     int num_threads = parseArgs(argv);
     FILE *file;
-        file = fopen("cells5", "r");
+    file = fopen("cells", "r");
     int len = get_number_of_lines(file);
     rewind(file);
     Coordinate coordinates[len];
